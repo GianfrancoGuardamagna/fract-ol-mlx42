@@ -1,0 +1,1 @@
+cc -Wall -Wextra -Werror main.c MLX42/build/libmlx42.a -I include -ldl -lglfw -pthread -lm
