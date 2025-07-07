@@ -5,8 +5,8 @@
 #include "MLX42/include/MLX42/MLX42.h"
 #include "ft_atoi.c"
 
-#define WIDTH 512
-#define HEIGHT 512
+#define WIDTH 1024
+#define HEIGHT 1024
 
 typedef struct {
 	double	real;
@@ -30,7 +30,9 @@ Complex add(Complex a, Complex b) {
 static int g_fractal_type = 0;
 static int g_max_iter = 100;
 static float zoom = 1.0;
+static mlx_image_t* image;
 
+// -----------------------------------------------------------------------------
 int	ft_strncmp(const char *s1, const char *s2, size_t n)
 {
 	size_t	i;
@@ -44,6 +46,7 @@ int	ft_strncmp(const char *s1, const char *s2, size_t n)
 		return (0);
 	return ((unsigned char)s1[i] - (unsigned char)s2[i]);
 }
+
 int	ft_strlen(const char *s)
 {
 	int	i;
@@ -53,16 +56,15 @@ int	ft_strlen(const char *s)
 		i++;
 	return (i);
 }
-
-static mlx_image_t* image;
-
-int32_t ft_pixel(int32_t r, int32_t g, int32_t b, int32_t a)
+// -----------------------------------------------------------------------------
+int32_t ft_pixel (int32_t r, int32_t g, int32_t b, int32_t a)
 {
-    return (r << 24 | g << 16 | b << 8 | a);
+	return (r << 24 | g << 16 | b << 8 | a);
 }
 
-int julia_iterator(Complex z, Complex c, int maxIter) {
-    int i;
+int julia_iterator (Complex z, Complex c, int maxIter)
+{
+	int i;
 
     i = 0;
     while (i < maxIter) {
@@ -108,15 +110,13 @@ int mandelbrot_iterator(Complex c, int maxIter) {
 
 uint32_t get_color(int iterations, int maxIter) {
     if (iterations == maxIter)
-    {
-        return ft_pixel(20, 20, 20, 255);
-    }
+        return ft_pixel(190, 223, 37, 255);
     else
     {
-        int r = (iterations * 255) / maxIter;
-        int g = (iterations * 128) / maxIter;
-        int b = (iterations * 64) / maxIter;
-        return ft_pixel(r, g, b, 255);
+		int r = 61;
+		int g = 239;
+		int b = 225;
+        return ft_pixel(r, g, b, 128);
     }
 }
 
@@ -147,14 +147,14 @@ void ft_fractal(void* param)
 		}
 	}
 }
-
-void ft_hook(void* param)
+// -----------------------------------------------------------------------------
+void ft_key_hook(void* param)
 {
 	mlx_t* mlx = param;
 
 	if (mlx_is_key_down(mlx, MLX_KEY_ESCAPE))
 		mlx_close_window(mlx);
-	if (mlx_is_key_down(mlx, MLX_KEY_UP))
+/*	if (mlx_is_key_down(mlx, MLX_KEY_UP))
     {
 		zoom += 0.1;
         ft_fractal(NULL);
@@ -163,14 +163,37 @@ void ft_hook(void* param)
     {
 		zoom -= 0.1;
         ft_fractal(NULL);
+    }*/
+}
+
+void ft_scroll_hook(double xdelta, double ydelta, void *param)
+{
+	(void) param;
+	(void) xdelta;
+
+	if (ydelta > 0)
+    {
+		zoom += 0.1;
+        ft_fractal(NULL);
     }
+	if (ydelta < 0)
+    {
+		zoom -= 0.1;
+        ft_fractal(NULL);
+    }
+}
+
+void ft_mouse_hook(double xdelta, double ydelta, void *param)
+{
+	(void) param;
+
+	printf("X:%f Y:%f\n", xdelta, ydelta); //La posición del cursor dentro de la ventana, comenzando de la esquina superior izquierda (0,0) y la esquina inferior derecha (WIDTH,HEIGHT)
 }
 
 // -----------------------------------------------------------------------------
 
 //Falta que reciba el C de Julia por parametros
-//Falta que utilice las ruedas del mouse en vez de las flechas para el zoom
-//Falta que el zoom lo haga en la ubicacion del mouse
+//Falta que el zoom lo haga en la ubicacion del mouse (ft_mouse_hook())
 //Falta que se mueva por el fractal con las flechas
 //Falta que cambie de colores
 int32_t main(int argc, char **argv)
@@ -229,7 +252,10 @@ int32_t main(int argc, char **argv)
     ft_fractal(NULL);
 
     // Set up hooks
-    mlx_loop_hook(mlx, ft_hook, mlx);
+    mlx_loop_hook(mlx, ft_key_hook, mlx);
+	mlx_scroll_hook(mlx, ft_scroll_hook, mlx);
+	mlx_cursor_hook(mlx, ft_mouse_hook, mlx);
+
 
     mlx_loop(mlx);
     mlx_terminate(mlx);
